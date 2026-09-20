@@ -1,0 +1,57 @@
+@startuml
+skinparam backgroundColor #FFFDF7
+skinparam shadowing false
+skinparam defaultFontName Verdana
+skinparam defaultFontSize 11
+skinparam sequenceMessageAlign center
+skinparam sequence {
+  ArrowColor #8B5E34
+  ActorBorderColor #8B5E34
+  LifeLineBorderColor #8B5E34
+  ParticipantBorderColor #8B5E34
+  ParticipantBackgroundColor #FFF3E0
+  ActorBackgroundColor #FFF3E0
+}
+
+actor Vendedor as V
+participant "cliente: Cliente" as C
+participant "producto: Producto" as P
+participant "factura: Factura" as F
+participant "detalle: DetalleFactura" as D
+
+V -> C : buscar(identificacion)
+activate C
+C --> V : datosCliente
+deactivate C
+
+V -> P : buscar(codigo)
+activate P
+P --> V : datosProducto
+deactivate P
+
+V -> F : crear(cliente)
+activate F
+
+V -> F : agregarDetalle(producto, cantidad)
+F -> P : tieneStockSuficiente(cantidad)
+activate P
+P --> F : resultado
+deactivate P
+
+alt stock suficiente
+    F -> D : crear(producto, cantidad)
+    activate D
+    D --> F : detalleCreado
+    deactivate D
+    F -> F : calcularTotales()
+    F -> P : descontarStock(cantidad)
+    activate P
+    deactivate P
+    V -> F : confirmar()
+    F --> V : numeroFactura
+else stock insuficiente
+    F --> V : error: producto sin stock
+end
+
+deactivate F
+@enduml

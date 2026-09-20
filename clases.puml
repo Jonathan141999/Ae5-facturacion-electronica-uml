@@ -1,0 +1,124 @@
+@startuml
+skinparam backgroundColor #FFFDF7
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam classFontSize 13
+skinparam classFontName Verdana
+skinparam classFontStyle bold
+skinparam defaultFontName Verdana
+skinparam defaultFontSize 11
+skinparam class {
+  BackgroundColor #FFF3E0
+  BorderColor #8B5E34
+  ArrowColor #8B5E34
+  FontColor #3E2C1C
+}
+hide circle
+
+abstract class Usuario {
+  - idUsuario: String
+  - nombreUsuario: String
+  - contrasenaHash: String
+  - rol: String
+  --
+  + iniciarSesion(usuario, clave): boolean
+}
+
+class Vendedor {
+  --
+  + buscarCliente(id): Cliente
+  + buscarProducto(codigo): Producto
+  + registrarVenta(cliente, items): Factura
+}
+
+class Contador {
+  --
+  + revisarComprobante(factura): void
+  + anularFactura(factura, motivo): NotaCredito
+}
+
+class Cliente {
+  - idCliente: String
+  - identificacion: String
+  - nombre: String
+  - direccion: String
+  - correo: String
+}
+
+class Producto {
+  - codigo: String
+  - nombre: String
+  - precioUnitario: Decimal
+  - stock: Integer
+  - stockMinimo: Integer
+  - tarifaIVA: Decimal
+  --
+  + tieneStockSuficiente(cant): boolean
+  + descontarStock(cant): void
+  + estaEnStockBajo(): boolean
+}
+
+class Factura {
+  - numero: String
+  - fecha: Date
+  - subtotal: Decimal
+  - iva: Decimal
+  - total: Decimal
+  - estado: String
+  --
+  + agregarDetalle(producto, cant): void
+  + calcularTotales(): void
+  + confirmar(): void
+}
+
+class DetalleFactura {
+  - cantidad: Integer
+  - precioUnitario: Decimal
+  - tarifaIVAAplicada: Decimal
+  - subtotalLinea: Decimal
+  --
+  + calcularSubtotal(): Decimal
+}
+
+class ComprobanteElectronico {
+  - claveAcceso: String
+  - xml: String
+  - estadoSRI: String
+  - numeroAutorizacion: String
+  - fechaEnvio: DateTime
+  --
+  + generarComprobanteXML(): void
+  + enviarComprobanteXML(): void
+  + registrarEstadoSRI(estado): void
+}
+
+class NotaCredito {
+  - numero: String
+  - fecha: Date
+  - motivo: String
+  --
+  + generar(): void
+  + vincularFactura(factura): void
+}
+
+class ReporteVentas {
+  - rangoFechas: String
+  - agrupador: String
+  --
+  + generar(): void
+  + exportar(): void
+}
+
+Usuario <|-- Vendedor
+Usuario <|-- Contador
+
+Vendedor "1" -- "0..*" Factura : registra >
+Cliente "1" -- "0..*" Factura : realiza >
+Factura "1" *-- "1..*" DetalleFactura : compone >
+DetalleFactura "0..*" -- "1" Producto : referencia >
+Factura "1" -- "0..1" ComprobanteElectronico : genera >
+Factura "1" -- "0..1" NotaCredito : anulada por >
+Contador "1" -- "0..*" NotaCredito : emite >
+ReporteVentas "1" o-- "0..*" Factura : consolida >
+
+@enduml
